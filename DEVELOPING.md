@@ -13,7 +13,7 @@ web/
 ├── DEVELOPING.md           this file
 ├── css/style.css
 ├── js/main.js              nav highlighting, BibTeX copy, single-video playback
-├── assets/img/             figures converted from pics/, plus video poster frames
+├── assets/img/             figures as SVG (vector) or 2x-resolution raster, plus posters
 └── assets/video/           deployment clips trimmed and re-encoded for the web
 ```
 
@@ -52,13 +52,54 @@ github.com credential (`gh auth login -h github.com`).
 
 ## Regenerating assets
 
-Figures — `pdftocairo` (poppler) at 200 dpi. Line-art figures stay PNG; photographic and
-rendered ones are converted to JPEG to keep the page light:
+### Figures
+
+The rule is set by what is inside the source PDF — check with
+`pdfimages -list pics/<fig>.pdf`:
+
+**Pure vector** (plots, diagrams — no embedded images) → **SVG**. Infinitely sharp at any
+zoom, and `pdftocairo -svg` converts all text to glyph paths, so there is no font dependency
+and no raster fallback:
 
 ```sh
-pdftocairo -png -r 200 -singlefile ../pics/overview/overview_v8.pdf assets/img/overview
-ffmpeg -i assets/img/overview.png -q:v 3 assets/img/overview.jpg && rm assets/img/overview.png
+pdftocairo -svg ../pics/adaptive_frequency_draft.pdf assets/img/learned_frequency.svg
 ```
+
+| Figure | Source |
+|---|---|
+| `method_overview.svg` | `pics/skatenav_main_figure_v5.pdf` |
+| `design_choice.svg` | `pics/Method/method_design_choice_no_P.pdf` |
+| `adaptive_frequency.svg` | `pics/adaptive_frequency.pdf` |
+| `learned_frequency.svg` | `pics/adaptive_frequency_draft.pdf` |
+| `temporal_allocation.svg` | `pics/cycles_energy_distance.pdf` |
+| `freq_sweep.svg` | `pics/flat_barnhard_uphill_1x3.pdf` |
+
+**Photographic or heavily rasterized** → PNG at a dpi that lands the intrinsic width near
+**2000 px**, i.e. 2× the ~972 px the page displays figures at. The dpi differs per figure
+because the source page sizes differ wildly (237 pt to 1903 pt wide) — a fixed dpi is what
+made the first pass blurry. Then JPEG at `-q:v 2` for the photo-heavy ones:
+
+| Figure | Source | dpi | Result |
+|---|---|---|---|
+| `overview.jpg` | `pics/overview/overview_v8.pdf` | 370 | 2025 px |
+| `skating_cycle.png` | `pics/skating_cycle_contact_mode.pdf` | 260 | 2951 px |
+| `terrain.png` | `pics/Terrain.pdf` | 620 | 2041 px |
+| `real_world_result.jpg` | `pics/Realworld/real_world_result_4.pdf` | 300 | 2271 px |
+| `hardware.jpg` | `pics/Realworld/real_world_pic.pdf` | 180 | 2198 px |
+| `mechanical_design.jpg` | `pics/Mechanical_Design_4.pdf` | 110 | 2908 px |
+
+```sh
+pdftocairo -png -r 370 -singlefile ../pics/overview/overview_v8.pdf assets/img/overview
+ffmpeg -i assets/img/overview.png -q:v 2 assets/img/overview.jpg && rm assets/img/overview.png
+```
+
+`skating_cycle` is vector but embeds 4.7 Mpx of photos, so its SVG comes out at 4.6 MB —
+raster is smaller there. Embedding the PDFs directly via `<object>`/`<embed>` was considered
+and rejected: mobile Safari and Chrome for Android frequently refuse to render inline PDFs,
+the browser viewer adds its own chrome, and the result does not reflow responsively. SVG
+gives the same vector sharpness with none of that.
+
+### Videos
 
 Videos — trimmed to the window each clip is interesting in, scaled to 960 px wide, CRF 30,
 audio dropped. The windows were chosen from the frame timestamps in
