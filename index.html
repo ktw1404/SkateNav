@@ -4,11 +4,13 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>SkateNav: Learning Unified Adaptive Skating and Local Navigation for Passive-Wheel Quadrupedal Robots</title>
-<meta name="description" content="SkateNav is a unified skating-navigation policy for passive-wheel quadrupedal robots. A single policy conditioned on a local waypoint and the remaining time decides steering, intermittent leg-driven propulsion, and the temporal allocation between pushing and gliding.">
+<meta name="description" content="SkateNav is a single policy for passive-wheel quadrupedal robots that decides steering, propulsion, and their timing together. It is given a target location and the time remaining rather than a velocity, and sets the pace of its own push-glide cycle as conditions change.">
 <meta property="og:title" content="SkateNav: Learning Unified Adaptive Skating and Local Navigation for Passive-Wheel Quadrupedal Robots">
-<meta property="og:description" content="A single policy decides steering, propulsion, and the push–glide temporal allocation. Lowest cost of transport in every one of six benchmark environments, verified on hardware.">
-<meta property="og:image" content="assets/img/teaser.jpg">
+<meta property="og:description" content="A single policy decides steering, propulsion, and their timing together. Given a target location and the time remaining rather than a velocity, it sets the pace of its own push–glide cycle as conditions change.">
+<meta property="og:image" content="https://ktw1404.github.io/SkateNav/assets/img/overview.jpg">
+<meta property="og:url" content="https://ktw1404.github.io/SkateNav/">
 <meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -43,8 +45,8 @@
         Navigation for Passive-Wheel Quadrupedal Robots</h1>
 
     <p class="hero-sub">
-      A single policy decides steering, intermittent leg-driven propulsion, and the
-      temporal allocation between pushing and gliding.
+      A single policy decides steering, propulsion, and their timing together &mdash; given
+      a target location and the time remaining, not a velocity.
     </p>
 
     <p class="authors">
@@ -76,15 +78,15 @@
     </div>
 
     <figure class="fig fig-teaser plain">
-      <img src="assets/img/teaser.jpg"
-           alt="The passive-wheel quadruped at three instants of a real-world deployment, earlier instants progressively faded.">
+      <img src="assets/img/overview.jpg"
+           alt="Five multi-exposure sequences of the passive-wheel quadruped skating on flat ground, through clutter, along curves, and on uphill and downhill slopes.">
       <figcaption>
-        <b>Skating in the real world.</b> The robot at three instants of a deployment on the
-        physical platform, spanning 5.7&nbsp;s, with the earlier instants progressively faded.
-        The background is one unmodified video frame, which already contains the middle
-        instant; the other two are taken from other frames of the same clip and mapped into
-        its viewpoint. The legs push the ground intermittently and the robot glides on the
-        accumulated momentum in between, covering distance without continuous actuation.
+        <b>SkateNav in diverse navigation scenarios.</b> A single policy navigates a Mini
+        Cheetah equipped with passive wheels, which are driven by the legs rather than by
+        motors. (a) On flat ground, the robot travels in a straight line at high speed.
+        (b),&nbsp;(c) In cluttered spaces, it steers around obstacles and follows curved
+        routes. (d),&nbsp;(e) On uphill and downhill slopes, it adjusts its motion to the
+        incline while the wheels remain unpowered.
       </figcaption>
     </figure>
 
@@ -95,33 +97,30 @@
 <section id="abstract" class="tint">
   <div class="wrap">
     <span class="eyebrow">Abstract</span>
-    <h2>Where to arrive and by when &mdash; not how fast</h2>
-    <p class="kicker">The command that lets a passive-wheel robot glide</p>
+    <h2>A velocity command cannot decide when to glide</h2>
+    <p class="kicker">So we stopped giving the policy one</p>
 
     <p>
-      Passive-wheel quadrupedal robots generate propulsion by pushing the ground with their
-      legs and glide on the resulting momentum, covering distance without continuous
-      actuation. However, navigating such a robot requires steering to be coordinated with
-      intermittent propulsion, and the temporal allocation between pushing and gliding to
-      follow the navigation context.
+      Quadrupedal robots traverse rough and discontinuous terrain, yet each impact with the
+      ground dissipates energy and limits how far they can travel. A passive-wheel quadruped
+      can build momentum with leg pushes and glide on the wheels in between, covering
+      distance without further pushing.
     </p>
     <p>
-      Recent reinforcement learning-based skating controllers have improved the speed and
-      robustness of passive-wheel locomotion. However, they track a commanded velocity at a
-      fixed cycle frequency. This suppresses the speed variation that gliding produces and
-      leaves the temporal allocation unaddressed.
+      Existing locomotion controllers take a commanded velocity as input, and navigation is
+      left to an external planner. How long to push and how long to glide depends on where
+      the robot must arrive and by when. A controller given only a velocity cannot make that
+      decision.
     </p>
     <p>
-      In this paper, we propose a unified skating-navigation policy for passive-wheel
-      quadrupedal robots, called <b>SkateNav</b>. In particular, we propose two components:
-      <b>a)</b> a goal-conditioned formulation that conditions the policy on a local waypoint
-      and the remaining time, constraining where the robot must arrive and by when but not
-      its instantaneous speed, and <b>b)</b> a frequency action that lets the policy advance
-      the alternating skating cycle at a rate it determines online. Consequently, steering,
-      propulsion, and the temporal allocation between them are decided together by a single
-      policy. As verified across six benchmark environments and on hardware, our approach
-      attains the lowest cost of transport in every environment. No constant cycle frequency
-      reproduces this efficiency.
+      In this paper, we present <b>SkateNav</b>, a single policy that decides steering,
+      propulsion, and their timing together. It is given a target location and the time
+      remaining rather than a velocity, and it sets the pace of its own push&ndash;glide
+      cycle as conditions change. In simulation, SkateNav reaches its goals more reliably
+      and at a lower energy cost than a planner paired with a velocity-tracking controller.
+      The same policy runs on the physical robot without further tuning, over indoor and
+      outdoor terrain. Videos of the experiments are
+      <a href="#realworld">on this page</a>.
     </p>
   </div>
 </section>
@@ -130,44 +129,35 @@
 <section id="contributions">
   <div class="wrap">
     <span class="eyebrow">Key Contributions</span>
-    <h2>Four things this paper establishes</h2>
-    <p class="kicker">To the best of our knowledge, passive-wheel navigation has not been addressed as a problem of its own</p>
+    <h2>Three things this paper establishes</h2>
+    <p class="kicker">Passive-wheel navigation needs to be addressed as a problem of its own</p>
 
     <div class="cards">
       <div class="card">
         <div class="ico">🎯</div>
-        <h3>One policy for steering and propulsion</h3>
+        <h3>Navigation as a problem of its own</h3>
         <p>
-          A passive-wheel navigation formulation in which a single policy, conditioned on a
-          local waypoint and the remaining time, decides steering and intermittent
-          leg-driven propulsion together.
+          We formulate local navigation for passive-wheel quadrupeds as a problem of its own
+          and propose a single policy that decides steering and propulsion together under a
+          time-budgeted goal-reaching objective.
         </p>
       </div>
       <div class="card">
         <div class="ico">🌀</div>
-        <h3>An online-modulated skating cycle</h3>
+        <h3>An adaptive skating cycle</h3>
         <p>
-          The policy modulates the progression of the skating cycle at every control step.
-          The temporal allocation between pushing and gliding therefore follows the
-          navigation context.
+          The policy pushes more often when speed is needed and glides longer when momentum
+          suffices &mdash; modulating the cycle frequency at every control step while the
+          inter-leg offset and phase fractions stay fixed.
         </p>
       </div>
       <div class="card">
         <div class="ico">📊</div>
-        <h3>Six environments, plus hardware</h3>
+        <h3>Verified in simulation and on hardware</h3>
         <p>
-          Evaluated across six benchmark environments and on a physical passive-wheel
-          quadruped, attaining the lowest cost of transport in every environment, with the
-          contribution of each proposed component isolated.
-        </p>
-      </div>
-      <div class="card">
-        <div class="ico">🔎</div>
-        <h3>No constant frequency matches it</h3>
-        <p>
-          A sweep over the full commandable range shows that no fixed cycle frequency
-          reproduces the efficiency of the adaptive one. The gain comes from redistributing
-          pushing and gliding <em>within</em> an episode.
+          Across five evaluation conditions, the approach reaches its goals more reliably and
+          at lower energy cost than planner&ndash;controller hierarchies, and the same policy
+          transfers to the physical robot without further tuning.
         </p>
       </div>
     </div>
@@ -191,15 +181,22 @@
       </figcaption>
     </figure>
 
-    <h3>Why a velocity command holds a passive wheel back</h3>
+    <h3>Why the usual hierarchy does not carry over</h3>
     <p>
-      Legged and actively wheeled systems can continuously generate propulsion through direct
-      ground interaction. A passive-wheel system cannot: it relies on intermittent leg-driven
-      pushes followed by gliding on the resulting momentum, so its motion inherently involves
-      repeated acceleration and deceleration. A velocity-tracking objective counts exactly
-      that variation as tracking error and suppresses it. A goal-reaching objective instead
-      specifies where the robot should reach within a given time budget, leaving its
-      instantaneous velocity unconstrained.
+      Wheeled-legged platforms divide by whether the wheels are actuated. Active wheels
+      generate propulsion directly from wheel torque, so the robot can accelerate or hold
+      speed at any moment, and the conventional hierarchy of a planner above a velocity
+      controller applies directly. Passive wheels have no such authority: no propulsive
+      force is available until the next push, and the wheels roll only along their heading.
+      The system is underactuated and nonholonomic.
+    </p>
+    <p>
+      Its motion therefore inherently involves repeated acceleration and deceleration, and a
+      velocity-tracking objective counts exactly that variation as tracking error and
+      suppresses it. A goal-reaching objective instead specifies where the robot should reach
+      within a given time budget, leaving its instantaneous velocity unconstrained. A
+      hierarchy divided at the velocity command separates decisions that have to be made
+      together.
     </p>
 
     <figure class="fig">
@@ -207,20 +204,20 @@
            alt="Cumulative distributions of instantaneous mechanical power for three platforms under goal-reaching and velocity-tracking objectives.">
       <figcaption>
         <b>Effect of the learning objective on power usage across locomotion mechanisms.</b>
-        Each panel shows the cumulative distribution of instantaneous mechanical power for
-        one platform under a goal-reaching and a velocity-tracking objective. The three
-        platforms are variants of the Mini Cheetah, with body mass and wheel dimensions
-        matched as closely as possible. Achieved speed is matched across all six cells. The
-        shaded area marks the shift between the two objectives, and it is widest for the
-        passive wheel &mdash; the only one of the three that gains propulsion from gliding
-        rather than from continued actuation.
+        Each panel shows the cumulative time profile of instantaneous mechanical power for a
+        different system, averaged over 100 trials under goal reaching (7&nbsp;m,
+        7&nbsp;s) and velocity tracking (1&nbsp;m/s). The shaded area indicates the power
+        distribution shift between the two objectives, with the passive-wheel system
+        particularly benefiting from the goal-reaching formulation &mdash; the largest shift
+        toward the low-power regime, reflecting the benefit of temporal flexibility in
+        accommodating its embodiment-specific dynamics.
       </figcaption>
     </figure>
 
     <h3>Task and command</h3>
     <p>
       The task is navigating a passive-wheel quadruped through a sequence of waypoints, each
-      to be reached within a prescribed time budget. The navigation command is
+      to be reached within a prescribed time budget, supplied by a global planner (A*) that captures the coarse structure of the environment while local obstacles remain unknown a priori. The navigation command is
       <b>c</b><sub>t</sub> = [<b>G</b><sup>B</sup><sub>cur</sub>,
       <b>G</b><sup>B</sup><sub>nxt</sub>, &tau;<sub>t</sub>] &mdash; the current and
       subsequent waypoints in the body frame, together with the normalized remaining time
@@ -248,9 +245,11 @@
       <img src="assets/img/skating_cycle.png"
            alt="The three skating stages and the resulting contact configurations.">
       <figcaption>
-        <b>Skating cycle.</b> (a) The three sequential stages of a single leg.
-        (b) The contact configurations that the half-cycle offset between the left and right
-        leg pairs induces, encouraged by the skating gait reward.
+        <b>Skating cycle.</b> (a) Each leg sequentially follows Glide, Push, and Recovery in
+        the phase domain, with the right and left leg pairs offset by half a cycle.
+        (b) As the cycle progresses, the desired contact configurations are defined: while
+        the right-side legs remain in Glide, the left-side legs transition through Glide,
+        Push, and Recovery with wheel, foot, and no contact, respectively.
       </figcaption>
     </figure>
 
@@ -273,10 +272,9 @@
       <img src="assets/img/adaptive_frequency.png"
            alt="Fixed versus adaptive progression of the skating phase over time.">
       <figcaption>
-        <b>Adaptive frequency.</b> (a) A fixed clock advances the phase at a constant rate,
-        giving every stage the same duration throughout an episode. (b) The frequency action
-        lets the policy set the rate online, so stage durations follow the navigation
-        context.
+        <b>Adaptive frequency.</b> (a) A fixed skating frequency advances the phase with
+        predefined durations, while (b) an adaptive skating frequency is adjusted at every
+        control step, allowing durations to vary according to navigation demands.
       </figcaption>
     </figure>
 
@@ -286,12 +284,13 @@
       architecture for robust sim-to-real transfer, and comprises a terrain encoder, a
       contact estimator, and a backbone. Its observation is a 5-tuple: a
       21&nbsp;&times;&nbsp;21 local elevation map at 0.1&nbsp;m resolution encoded to a
-      32-dimensional latent; the robot state including joint states, foot and wheel positions,
-      body orientation and angular velocity, and the previous action; a skating-cycle
-      observation encoding each leg's phase as sin/cos pairs; a contact state estimated from
-      a five-step proprioceptive history; and the navigation command. The backbone outputs
+      32-dimensional latent; the robot state &mdash; a five-step proprioceptive history of
+      joint states, foot and wheel positions, body orientation and angular velocity and the
+      previous action, together with the body linear velocity; a skating-cycle observation
+      encoding each leg's phase as sin/cos pairs; a contact state estimated from that
+      proprioceptive history; and the navigation command. The backbone outputs
       <b>a</b> = [&Delta;<b>q</b>, a<sub>f</sub>] &isin; &#8477;<sup>13</sup>, tracked by PD
-      controllers. The critic additionally receives the privileged domain-randomization
+      controllers. The asymmetric critic additionally receives the privileged randomized
       parameters.
     </p>
     <dl class="specs">
@@ -311,37 +310,38 @@
 <section id="results">
   <div class="wrap">
     <span class="eyebrow">Results</span>
-    <h2>Lowest cost of transport in every environment</h2>
-    <p class="kicker">1000 episodes per environment &middot; shared route table &middot; no method given a global reference path</p>
+    <h2>More reliable arrivals at a lower energy cost</h2>
+    <p class="kicker">1000 navigation tasks per condition &middot; start&ndash;goal pairs 8&ndash;28 m apart &middot; 14 s time budget</p>
 
     <div class="stats">
       <div class="stat">
-        <div class="num">0.614</div>
-        <div class="lbl">Average CoT</div>
-        <div class="sub">18% below the best baseline configuration (0.748)</div>
+        <div class="num">93.3%</div>
+        <div class="lbl">Average success rate</div>
+        <div class="sub">+8.1 points over the best planner&ndash;VT baseline (85.2%)</div>
       </div>
       <div class="stat">
-        <div class="num">81.2%</div>
-        <div class="lbl">Average success rate</div>
-        <div class="sub">+6.0 points over the best baseline (75.2%)</div>
+        <div class="num">0.559</div>
+        <div class="lbl">Average CoT</div>
+        <div class="sub">11% below the best planner&ndash;VT baseline (0.626)</div>
       </div>
       <div class="stat">
         <div class="num">0.28 ms</div>
-        <div class="lbl">Per decision step</div>
-        <div class="sub">A single forward pass &mdash; an order of magnitude faster than the sampling-based planners</div>
+        <div class="lbl">Inference time</div>
+        <div class="sub">One forward pass &mdash; against 1.31 ms for MPPI and 2.48 ms for CEM</div>
       </div>
     </div>
 
-    <h3>Navigation performance</h3>
+    <h3>Navigation performance in simulation</h3>
     <p>
-      SkateNav attains the lowest CoT in every environment and the highest success rate in
-      all but the downhill terrain, where CEM completes more trials at a higher transport
-      cost. The energy efficiency of the velocity-command baselines saturates regardless of
-      tuning: varying the cost profile of MPPI and CEM shifts their success rate
-      substantially, yet their CoT stays in a narrow band above ours. The cause lies in the
-      objective imposed on the low-level controller &mdash; while a commanded velocity is
-      tracked, the speed variation of a push&ndash;glide cycle counts as tracking error and
-      is suppressed, leaving little room to coast on accumulated momentum.
+      We compare SkateNav against planner&ndash;controller hierarchies that pair a local
+      planner with a velocity-tracking (VT) policy. The VT policy differs from SkateNav only
+      in the task formulation, and all planners share the same rollout model and cost
+      function &mdash; goal distance, collision, and command smoothness. <b>DWA+VT</b>
+      samples dynamically admissible velocity commands and selects the lowest-cost one.
+      <b>MPPI+VT</b> samples 512 sequences over a 2 s horizon and applies their
+      softmax-weighted average with an adaptive temperature. <b>CEM+VT</b> uses the same
+      horizon and sample budget but iteratively refits a Gaussian proposal to elite samples
+      and applies the converged mean.
     </p>
 
     <div class="table-scroll">
@@ -351,15 +351,13 @@
             <th class="lead" rowspan="2">Method</th>
             <th class="grp" colspan="2">Flat</th>
             <th class="grp" colspan="2">BARN-easy</th>
-            <th class="grp" colspan="2">BARN-medium</th>
             <th class="grp" colspan="2">BARN-hard</th>
             <th class="grp" colspan="2">Uphill</th>
             <th class="grp" colspan="2">Downhill</th>
             <th class="grp" colspan="2">Average</th>
-            <th class="grp" rowspan="2">Time<br>[ms]</th>
+            <th class="grp" rowspan="2">IT<br>[ms]</th>
           </tr>
           <tr>
-            <th>SR <span class="arrow">&uarr;</span></th><th>CoT <span class="arrow">&darr;</span></th>
             <th>SR <span class="arrow">&uarr;</span></th><th>CoT <span class="arrow">&darr;</span></th>
             <th>SR <span class="arrow">&uarr;</span></th><th>CoT <span class="arrow">&darr;</span></th>
             <th>SR <span class="arrow">&uarr;</span></th><th>CoT <span class="arrow">&darr;</span></th>
@@ -371,79 +369,62 @@
         <tbody>
           <tr class="ours">
             <td class="lead">Ours</td>
-            <td class="fst">100.0</td><td class="fst">0.542</td>
-            <td class="fst">86.6</td><td class="fst">0.552</td>
-            <td class="fst">53.4</td><td class="fst">0.603</td>
-            <td class="fst">57.8</td><td class="fst">0.588</td>
-            <td class="fst">100.0</td><td class="fst">0.972</td>
-            <td>89.6</td><td class="fst">0.429</td>
-            <td class="fst">81.2</td><td class="fst">0.614</td>
-            <td class="fst">0.28</td>
+            <td class="fst">100.0</td><td class="fst">0.512</td>
+            <td class="fst">89.3</td><td class="fst">0.539</td>
+            <td class="fst">79.0</td><td class="fst">0.554</td>
+            <td class="fst">100.0</td><td class="fst">0.976</td>
+            <td class="fst">98.4</td><td class="fst">0.216</td>
+            <td class="fst">93.3</td><td class="fst">0.559</td>
+            <td>0.28</td>
           </tr>
           <tr>
-            <td class="lead">MPPI (cons.)</td>
-            <td>89.1</td><td>0.711</td>
-            <td>44.2</td><td>0.749</td>
-            <td>13.1</td><td>0.862</td>
-            <td>10.9</td><td>0.809</td>
-            <td>73.5</td><td>1.178</td>
-            <td>77.9</td><td>0.555</td>
-            <td>51.4</td><td>0.810</td>
-            <td class="snd">1.31</td>
+            <td class="lead sub">&#8627; w/o Adaptive Freq.</td>
+            <td class="fst">100.0</td><td class="snd">0.628</td>
+            <td class="snd">88.0</td><td class="snd">0.695</td>
+            <td class="snd">78.0</td><td class="snd">0.653</td>
+            <td class="fst">100.0</td><td class="snd">1.402</td>
+            <td class="snd">70.0</td><td class="snd">0.348</td>
+            <td class="snd">84.0</td><td class="snd">0.581</td>
+            <td>&mdash;</td>
+          </tr>
+          <tr class="grp-end">
+            <td class="lead sub">&#8627; w/o Skating Cycle</td>
+            <td>83.3</td><td>1.019</td>
+            <td>75.5</td><td>1.058</td>
+            <td>72.8</td><td>1.067</td>
+            <td>0.0</td><td>&mdash;</td>
+            <td>2.4</td><td>0.431</td>
+            <td>58.5</td><td>0.894<sup>*</sup></td>
+            <td>&mdash;</td>
           </tr>
           <tr>
-            <td class="lead">MPPI (nominal)</td>
-            <td>96.1</td><td>0.704</td>
-            <td>71.6</td><td>0.740</td>
-            <td>35.6</td><td>0.830</td>
-            <td>38.2</td><td>0.794</td>
-            <td>81.5</td><td>1.135</td>
-            <td>93.8</td><td>0.518</td>
-            <td>69.5</td><td>0.787</td>
-            <td class="snd">1.31</td>
+            <td class="lead">DWA+VT</td>
+            <td class="fst">100.0</td><td>0.608</td>
+            <td>73.1</td><td>0.657</td>
+            <td>55.5</td><td>0.683</td>
+            <td class="snd">99.8</td><td>1.046</td>
+            <td>97.7</td><td>0.341</td>
+            <td class="snd">85.2</td><td>0.667</td>
+            <td>&mdash;</td>
           </tr>
           <tr>
-            <td class="lead">MPPI (aggr.)</td>
-            <td>95.6</td><td>0.729</td>
-            <td class="snd">76.7</td><td>0.751</td>
-            <td class="snd">53.0</td><td>0.834</td>
-            <td class="snd">53.4</td><td>0.771</td>
-            <td>76.7</td><td>1.204</td>
-            <td>85.0</td><td>0.560</td>
-            <td>73.4</td><td>0.808</td>
-            <td class="snd">1.31</td>
+            <td class="lead">MPPI+VT</td>
+            <td>93.4</td><td>0.606</td>
+            <td>77.4</td><td>0.650</td>
+            <td class="snd">70.9</td><td>0.664</td>
+            <td>86.9</td><td>1.093</td>
+            <td>94.1</td><td class="snd">0.282</td>
+            <td>84.5</td><td>0.659</td>
+            <td>1.31</td>
           </tr>
           <tr>
-            <td class="lead">CEM (cons.)</td>
-            <td>95.5</td><td class="snd">0.684</td>
-            <td>48.6</td><td>0.730</td>
-            <td>15.1</td><td>0.831</td>
-            <td>16.3</td><td>0.791</td>
-            <td>76.5</td><td>1.093</td>
-            <td>85.8</td><td>0.530</td>
-            <td>56.3</td><td>0.776</td>
-            <td>2.48</td>
-          </tr>
-          <tr>
-            <td class="lead">CEM (nominal)</td>
-            <td class="snd">99.0</td><td>0.685</td>
-            <td>70.0</td><td class="snd">0.717</td>
-            <td>40.0</td><td>0.796</td>
-            <td>49.4</td><td>0.750</td>
-            <td>85.2</td><td>1.050</td>
-            <td class="snd">95.0</td><td class="snd">0.515</td>
-            <td>73.1</td><td>0.752</td>
-            <td>2.48</td>
-          </tr>
-          <tr>
-            <td class="lead">CEM (aggr.)</td>
-            <td class="snd">99.0</td><td>0.685</td>
-            <td>68.7</td><td>0.723</td>
-            <td>51.9</td><td class="snd">0.787</td>
-            <td>49.3</td><td class="snd">0.735</td>
-            <td class="snd">86.5</td><td class="snd">1.045</td>
-            <td class="fst">95.8</td><td>0.516</td>
-            <td class="snd">75.2</td><td class="snd">0.748</td>
+            <td class="lead">CEM+VT</td>
+            <td class="snd">98.5</td><td class="snd">0.573</td>
+            <td class="snd">78.8</td><td class="snd">0.622</td>
+            <td>70.4</td><td class="snd">0.635</td>
+            <td>69.6</td><td class="snd">1.007</td>
+            <td class="snd">98.1</td><td>0.294</td>
+            <td>83.1</td><td class="snd">0.626</td>
             <td>2.48</td>
           </tr>
         </tbody>
@@ -452,119 +433,109 @@
     <p class="tbl-note">
       <span class="legend"><i class="a"></i> Best</span>
       <span class="legend"><i class="b"></i> Second-best</span>
-      Marked within each column. All methods observe the same proprioception, elevation map,
-      and command, and none is given a global reference path. <em>Average</em> is the
-      unweighted average over the environments; CoT is averaged over successful episodes
-      only. Pure Pursuit, evaluated separately as a privileged upper bound with access to
-      the global reference path, surpasses our success rate in the densest tiers, but its
-      CoT exceeds ours at every lookahead we swept.
+      Marked within each group &mdash; SkateNav with its two ablations above, the
+      planner&ndash;VT hierarchies below.
+      <sup>*</sup><em>Uphill</em> is excluded from the average CoT, since
+      <em>w/o Skating Cycle</em> completes no trial there.
     </p>
 
-    <h3>No constant frequency reproduces it</h3>
     <p>
-      A natural question is whether a better constant frequency would suffice. Sweeping the
-      fixed clock across the range the policy can command yields a shallow CoT basin: slow
-      clocks cannot accumulate the momentum needed to reach the waypoint in time, and the
-      slowest setting collapses the success rate outright, while fast clocks spend energy on
-      strokes the robot does not need. SkateNav lies below the entire curve, including its
-      minimum, at a mean frequency inside the swept range. The gain therefore comes from
-      redistributing pushing and gliding within an episode, not from a different constant
-      rate.
+      On <em>Flat</em>, all methods achieve a high success rate; the differences become
+      pronounced as navigation demands increase. <b>DWA+VT</b> degrades in
+      <em>BARN-easy</em> and <em>-hard</em>, where reactive steering corrections for obstacle
+      avoidance are difficult to realize under intermittent foot-ground propulsion and
+      retained rolling momentum. <b>MPPI+VT</b> and <b>CEM+VT</b> mitigate this by optimizing
+      command sequences over a planning horizon, but their navigation decisions remain
+      separated from the phase-dependent skating coordination, which shows up as a lower
+      success rate.
+    </p>
+
+    <h3>The learned frequency tracks navigation demand</h3>
+    <p>
+      SkateNav instead adapts steering, propulsion, and gliding jointly, and the learned
+      skating frequency varies systematically with what the route asks for. As the waypoint
+      distance grows under the same time budget, the policy raises the frequency, producing
+      more frequent <em>Push</em> phases for propulsion. The tendency is strongest on
+      <em>Uphill</em>, where repeated foot-ground contact provides the traction needed for
+      traversal, whereas <em>Downhill</em> favors lower frequencies to exploit the momentum
+      gained during descent. The frequency also rises as obstacle clearance decreases in the
+      <em>BARN</em> settings, enabling rapid steering corrections.
+    </p>
+
+    <figure class="fig">
+      <img src="assets/img/learned_frequency.png"
+           alt="Mean skating frequency versus waypoint distance for uphill, flat and downhill, and versus obstacle clearance for BARN-easy and BARN-hard.">
+      <figcaption>
+        <b>Adaptive frequency.</b> (a) Mean skating frequency against waypoint distance,
+        under the same time budget, for <em>Uphill</em>, <em>Flat</em> and <em>Downhill</em>.
+        (b) Mean skating frequency against obstacle clearance in the <em>BARN</em> settings.
+      </figcaption>
+    </figure>
+
+    <h3>Where the energy goes</h3>
+    <p>
+      Beyond adapting to demand, SkateNav exploits this gait-level flexibility more
+      effectively than the VT policy. Grouping all phase pairs between the right and left
+      legs into <em>Glide&ndash;Glide</em> (<em>G-G</em>), <em>Glide&ndash;Push</em>
+      (<em>G-P</em>) and <em>Glide&ndash;Recovery</em> (<em>G-R</em>) &mdash; regardless of
+      phase order &mdash; VT slows the phase progression during <em>G-P</em> while rapidly
+      progressing through <em>G-R</em> to maintain the commanded velocity, giving it longer
+      <em>G-P</em> and shorter <em>G-R</em> durations than ours.
+    </p>
+    <p>
+      For the same total traversal distance, this difference makes SkateNav cover comparable
+      distances during <em>G-P</em> and <em>G-R</em> while consuming substantially less
+      energy in <em>G-R</em>, whereas VT relies more heavily on the energy-intensive
+      <em>G-P</em> interval for travel. This temporal redistribution toward momentum-driven
+      motion is what supports the consistently lower CoT across the benchmarks.
+    </p>
+
+    <figure class="fig">
+      <img src="assets/img/temporal_allocation.png"
+           alt="Phase timelines and frequency traces for SkateNav versus the velocity-tracking policy, with energy proxy and distance broken down by phase pair.">
+      <figcaption>
+        <b>Temporal allocation of push and glide.</b> (a) Phase timelines of the right and
+        left leg pairs over one normalized cycle, with the skating frequency below, for
+        SkateNav and the VT policy. (b) Energy proxy and traveled distance accumulated in
+        each phase pair, for the same total traversal distance.
+      </figcaption>
+    </figure>
+
+    <h3>No single fixed frequency does both</h3>
+    <p>
+      To examine whether an adaptive frequency is necessary at all, we compare against
+      <em>w/o Adaptive Freq.</em>, which advances the skating cycle at a fixed rate. The
+      frequency that performs well depends on the navigation demand: <em>Uphill</em> requires
+      sufficiently high frequencies for reliable navigation, whereas raising the frequency on
+      <em>Flat</em> and <em>BARN-hard</em> raises CoT. Even within one environment, different
+      settings lead to noticeable differences in both navigation performance and energy
+      efficiency. No single fixed frequency achieves both a high success rate and a low CoT
+      across demands. SkateNav instead learns to adjust the frequency as part of its
+      navigation decision, preserving navigation performance while improving energy
+      efficiency.
     </p>
 
     <figure class="fig">
       <img src="assets/img/freq_sweep.png"
-           alt="Cost of transport over a sweep of fixed skating frequencies, and the power proxy accumulated per stage pair with and without the Glide reward.">
+           alt="Cost of transport box plots over a sweep of fixed skating frequencies on Flat, BARN-hard and Uphill, with SkateNav marked.">
       <figcaption>
-        <b>Contribution of adaptive frequency and of the Glide reward.</b>
-        (a) CoT of <em>w/o Adaptive Freq</em> over a sweep of its fixed clock. Each box spans
-        one fixed frequency, the number above it is the corresponding success rate, and the
-        orange box marks SkateNav placed at its mean skating frequency.
-        (b) Power proxy accumulated in each pair of stages the two leg pairs occupy
-        concurrently, with and without the Glide reward.
+        <b>Contribution of the adaptive frequency.</b> CoT of <em>w/o Adaptive Freq.</em>
+        over a sweep of its fixed clock on <em>Flat</em>, <em>BARN-hard</em> and
+        <em>Uphill</em>. Each box spans one fixed frequency and the number above it is the
+        corresponding success rate; the magenta box marks SkateNav.
       </figcaption>
     </figure>
 
-    <h3>Push&ndash;glide component ablation</h3>
-    <div class="table-scroll">
-      <table>
-        <thead>
-          <tr>
-            <th class="lead" rowspan="2">Method</th>
-            <th class="grp" colspan="2">Flat</th>
-            <th class="grp" colspan="2">BARN-hard</th>
-            <th class="grp" colspan="2">Uphill</th>
-          </tr>
-          <tr>
-            <th>SR <span class="arrow">&uarr;</span></th><th>CoT <span class="arrow">&darr;</span></th>
-            <th>SR <span class="arrow">&uarr;</span></th><th>CoT <span class="arrow">&darr;</span></th>
-            <th>SR <span class="arrow">&uarr;</span></th><th>CoT <span class="arrow">&darr;</span></th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr class="ours">
-            <td class="lead">Ours</td>
-            <td class="fst">100.0</td><td class="fst">0.542</td>
-            <td>57.8</td><td class="fst">0.588</td>
-            <td class="fst">100.0</td><td class="fst">0.972</td>
-          </tr>
-          <tr>
-            <td class="lead">w/o Glide Reward</td>
-            <td class="fst">100.0</td><td>0.575</td>
-            <td>62.5</td><td>0.626</td>
-            <td class="fst">100.0</td><td>1.235</td>
-          </tr>
-          <tr>
-            <td class="lead">w/o Adaptive Freq</td>
-            <td class="fst">100.0</td><td>0.644</td>
-            <td class="fst">63.0</td><td>0.688</td>
-            <td class="fst">100.0</td><td>1.401</td>
-          </tr>
-          <tr>
-            <td class="lead">w/o Skating Cycle</td>
-            <td class="fst">100.0</td><td>0.771</td>
-            <td>57.4</td><td>0.857</td>
-            <td class="fst">100.0</td><td>1.872</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-    <p class="tbl-note">
-      <span class="legend"><i class="a"></i> Best</span>
-      Marked within each column. Three representative terrains chosen to span the range of
-      propulsive demand: level ground, dense obstacles, and a sustained climb. All variants
-      are trained with identical reward weights and curricula.
-    </p>
-
-    <h4>What each component contributes</h4>
+    <h3>The cycle is what makes skating possible</h3>
     <p>
-      <b>Adaptive frequency.</b> The CoT reduction over the fixed clock grows with the
-      propulsive demand of the terrain, from 16% on flat ground to 31% uphill.
-    </p>
-    <p>
-      <b>The Glide reward.</b> Removing it raises the consumed power in every stage pair, and
-      the increase is largest in <em>Glide&ndash;Glide</em>, precisely where no propulsion is
-      intended. The wheels are then driven against the body motion while in contact, so the
-      intervals reserved for coasting dissipate energy instead of preserving momentum. The
-      variant keeps the skating structure and a comparable success rate yet trails in CoT.
-    </p>
-    <p>
-      <b>The skating cycle itself.</b> Removing it leaves the largest gap &mdash; CoT rises
-      by 42% on flat ground and 93% uphill. Its success rate nonetheless matches the other
-      variants, because the policy converges to sustained ground contact instead of
-      establishing distinct glide intervals. Continuous contact keeps steering available at
-      all times, but forfeits the momentum that makes passive wheels efficient. The
-      phase-based cycle is therefore a prerequisite for securing glide intervals, and
-      adaptive frequency allocates their duration on top of it.
-    </p>
-    <p>
-      <b>The trade-off.</b> The momentum that gliding accumulates becomes a liability wherever
-      it must be shed. Under nonholonomic rolling constraints, retained momentum limits the
-      steering authority available within a given distance and makes the terminal stopping
-      condition harder to satisfy. SkateNav accordingly trails the fixed-frequency variant in
-      success rate on <em>BARN-hard</em>, while its transport cost is lower by a far larger
-      margin. This trade-off is intrinsic to passive-wheel locomotion, since efficiency and
-      maneuverability are coupled through the same momentum.
+      Without the skating cycle, the goal-reaching objective alone struggles to discover an
+      energy-efficient skating pattern &mdash; one that involves intermittent foot-ground
+      contact for propulsion with the resulting momentum exploited through wheel-ground
+      contact for gliding. <em>w/o Skating Cycle</em> yields a lower success rate and
+      substantially higher CoT across all environments, and fails on <em>Uphill</em>
+      completely. The skating cycle therefore provides a useful inductive bias for organizing
+      skating behavior, while the adaptive frequency provides the flexibility to exploit that
+      structure across varying navigation conditions.
     </p>
   </div>
 </section>
@@ -573,59 +544,58 @@
 <section id="benchmarks" class="tint">
   <div class="wrap">
     <span class="eyebrow">Benchmark Environments</span>
-    <h2>Six environments, 1000 episodes each</h2>
-    <p class="kicker">Obstacle-free ground, three BARN density tiers, and two 15&deg; slopes</p>
+    <h2>Four environments, five evaluation conditions</h2>
+    <p class="kicker">1000 navigation tasks per condition, from a shared start&ndash;goal table</p>
 
     <figure class="fig">
-      <img src="assets/img/terrain.jpg"
-           alt="BARN obstacle layouts at three density tiers and the 15-degree slope terrain.">
+      <img src="assets/img/terrain.png"
+           alt="The four simulated benchmark terrains: flat ground, two BARN obstacle layouts, and a 15-degree slope.">
       <figcaption>
-        <b>Benchmark environments.</b> (a)&ndash;(c) BARN obstacle layouts at the
-        <em>easy</em>, <em>medium</em>, and <em>hard</em> density tiers.
-        (d) The 15&deg; slope used for the <em>Uphill</em> and <em>Downhill</em>
-        environments.
+        (a) <em>Flat</em>. (b)&ndash;(c) <em>BARN-easy</em> and <em>BARN-hard</em>, with
+        obstacle layouts based on BARN configurations and mean clearances of 4.26 and
+        2.16&nbsp;m, respectively. (d) The 15&deg; slope for <em>Uphill</em> and
+        <em>Downhill</em> conditions.
       </figcaption>
     </figure>
 
     <div class="env-grid">
       <div class="env">
         <div class="name">Flat</div>
-        <div class="meta">Obstacle-free ground.</div>
+        <div class="meta">Basic traversal ability through skating locomotion, in a 32 &times; 10 m arena.</div>
       </div>
       <div class="env">
         <div class="name">BARN-easy</div>
-        <div class="meta">Mean clearance 4.26 m, tiled into a 10 &times; 32 m arena.</div>
-      </div>
-      <div class="env">
-        <div class="name">BARN-medium</div>
-        <div class="meta">Mean clearance 2.16 m.</div>
+        <div class="meta">Mean clearance 4.26 m. Coordinated propulsion and steering with reactive obstacle avoidance.</div>
       </div>
       <div class="env">
         <div class="name">BARN-hard</div>
-        <div class="meta">Mean clearance 1.49 m.</div>
+        <div class="meta">Mean clearance 2.16 m &mdash; the same task in denser clutter.</div>
       </div>
       <div class="env">
         <div class="name">Uphill</div>
-        <div class="meta">Sustained 15&deg; climb &mdash; the highest propulsive demand.</div>
+        <div class="meta">15&deg; climb. Tests the ability to sustain propulsion.</div>
       </div>
       <div class="env">
         <div class="name">Downhill</div>
-        <div class="meta">15&deg; descent, where momentum must be shed rather than built.</div>
+        <div class="meta">The same 15&deg; slope descending. Tests the ability to exploit gliding efficiently.</div>
       </div>
     </div>
 
-    <h4>Metrics</h4>
+    <h4>Tasks and metrics</h4>
+    <p>
+      For each condition we generate 1000 navigation tasks by sampling start&ndash;goal pairs
+      8&ndash;28&nbsp;m apart, each with a 14&nbsp;s time budget.
+    </p>
     <p>
       <b>Success rate (SR)</b> is the proportion of trials in which the robot arrives within
-      0.2 m of the target. <b>Cost of transport (CoT)</b> normalizes an accumulated actuator
-      energy proxy by the robot weight and the traveled distance, using a simplified DC motor
-      model in which the electrical power of an actuator is the sum of mechanical power and
-      Joule loss. Regenerative recovery is not modeled. The motor constants are those of the
-      GIM8108-6 actuator used in our system (R = 0.73 &Omega;,
-      K<sub>t</sub> = 1.22 N&middot;m/A). <b>Time</b> is the inference time per decision step
-      on an RTX 4090 in a single-robot setting. The BARN environments are sorted by distance
-      to the closest obstacle and grouped into three tiers; all methods share the same 1000
-      evaluation episodes per environment.
+      0.2&nbsp;m of the target. <b>Cost of transport (CoT)</b> normalizes the accumulated
+      actuator energy by the robot weight and the traveled distance, computed with a
+      simplified DC motor model in which the electrical power of each actuator is
+      approximated as the sum of mechanical power and Joule loss; regenerative energy
+      recovery is not modeled. The motor constants are those of the actuator used in our
+      system, R = 0.73&nbsp;&Omega; and K<sub>t</sub> = 1.22&nbsp;N&middot;m/A.
+      <b>Inference time (IT)</b> is the time required for each decision step on an RTX 4090
+      in a single-robot setting.
     </p>
   </div>
 </section>
@@ -641,7 +611,7 @@
       We deployed the policy trained in simulation on the physical platform without further
       tuning. State estimation and the local elevation map are produced onboard at 10 Hz, and
       the policy runs at 50 Hz. Among the indoor deployments, the traverse below covers the
-      widest range of conditions: an extended route with curves, a descending ramp, and
+      widest range of conditions: an extended route with curves, a downhill, and
       cluttered rooms. The velocity along the trajectory is not uniform &mdash; the robot
       slowed through the curves and the cluttered sections, and reached its highest velocity
       on the descent. This matched the behavior the adaptive skating cycle produces in

@@ -380,6 +380,10 @@ tbody td { border-top: 1px solid var(--rule); }
 tbody tr.ours { background: #f6f6f6; }
 tbody tr.ours td.lead { font-weight: 700; }
 
+td.lead.sub { padding-left: 18px; color: var(--ink-soft); }
+tbody tr.grp-end td { border-bottom: 1.5px solid var(--ink); }
+tbody tr.grp-end + tr td { border-top: 0; }
+
 td.fst { background: var(--accent-mid); font-weight: 700; }
 td.snd { background: var(--accent-soft); }
 
