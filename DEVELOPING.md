@@ -81,7 +81,7 @@ made the first pass blurry. Then JPEG at `-q:v 2` for the photo-heavy ones:
 
 | Figure | Source | dpi | Result |
 |---|---|---|---|
-| `overview.jpg` | `pics/overview/overview_v8.pdf` | 370 | 2025 px |
+| `overview.jpg` | `pics/main_figure/overview_v6_no_arrow.pdf` | 370 | 2025×1547 px |
 | `skating_cycle.png` | `pics/skating_cycle_contact_mode.pdf` | 260 | 2951 px |
 | `terrain.png` | `pics/Terrain.pdf` | 620 | 2041 px |
 | `real_world_result.jpg` | `pics/Realworld/real_world_result_4.pdf` | 300 | 2271 px |
@@ -89,9 +89,13 @@ made the first pass blurry. Then JPEG at `-q:v 2` for the photo-heavy ones:
 | `mechanical_design.jpg` | `pics/Mechanical_Design_4.pdf` | 110 | 2908 px |
 
 ```sh
-pdftocairo -png -r 370 -singlefile ../pics/overview/overview_v8.pdf assets/img/overview
+pdftocairo -png -r 370 -singlefile ../pics/main_figure/overview_v6_no_arrow.pdf assets/img/overview
 ffmpeg -i assets/img/overview.png -q:v 2 assets/img/overview.jpg && rm assets/img/overview.png
 ```
+
+The hero figure uses **`overview_v6_no_arrow.pdf`** by request, not the
+`overview_v8.pdf` that the v2 manuscript references. Same five panels and scenes;
+v6's panel (a) is taller, so the figure is 394×301 pt rather than 394×275 pt.
 
 `skating_cycle` is vector but embeds 4.7 Mpx of photos, so its SVG comes out at 4.6 MB —
 raster is smaller there. Embedding the PDFs directly via `<object>`/`<embed>` was considered
