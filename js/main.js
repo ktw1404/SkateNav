@@ -75,9 +75,9 @@
     });
   }
 
-  /* ---- only one clip plays at a time ----------------------------------- */
+  /* ---- only one video plays at a time (hero + clips) ----------------------------------- */
 
-  var videos = Array.prototype.slice.call(document.querySelectorAll('.vid video'));
+  var videos = Array.prototype.slice.call(document.querySelectorAll('video'));
   videos.forEach(function (v) {
     v.addEventListener('play', function () {
       videos.forEach(function (other) {
