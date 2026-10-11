@@ -139,7 +139,7 @@ ffmpeg -nostdin -y -ss 9 -i assets/video/real_indoor_cluttered.mp4 -frames:v 1 \
 
 ### Clips cut from the supplementary video (Main_Original.mp4, 1920×1080 60 fps)
 
-Cropped to the simulation panels where the source is a slide, kept at native crop size, 30 fps, CRF 23, audio dropped. The hero `skatenav_supplementary.mp4` is now `IMG_3380 2.MOV` (raw indoor run, 50.7 s) at 1080p, 30 fps, CRF 23, preceded by a 3 s title card: the first frame dimmed with `drawbox` black@0.6 and the paper title in white Liberation Sans. Total 53.8 s. The clips below still come from `Main_Original.mp4`.
+Cropped to the simulation panels where the source is a slide, kept at native crop size, 30 fps, CRF 23, audio dropped. The hero `skatenav_supplementary.mp4` is now `IMG_3380 2.MOV` (raw indoor run, 50.7 s) at 1080p, 30 fps, CRF 23, preceded by a 3 s title card: the first frame dimmed with `drawbox` black@0.6 and the paper title in white Liberation Sans. Total 53.8 s. The clips below still come from `Main_Original.mp4`. A humanoid robot visible at the left/top of the frame from 45.5 s to the end is pixelated with a keyframed moving box (two ffmpeg `crop`→`scale`→`overlay` chains, 560×380 for 45.5–48.5 s and 520×820 after); the un-pixelated master is not in the repo.
 
 | Output | Source window | Crop (source px) | Shown in |
 |---|---|---|---|
