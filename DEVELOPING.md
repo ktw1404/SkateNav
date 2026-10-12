@@ -64,6 +64,7 @@ pdftocairo -svg ../pics/adaptive_frequency_draft.pdf assets/img/learned_frequenc
 
 | Figure | Source |
 |---|---|
+| `adaptive_frequency.svg` | `pics/fig6_final_v10.pdf` (Fig. 6, fixed vs adaptive frequency) | SVG | Method › Adaptive skating cycle |
 | `design_choice.svg` | `pics/method_desgin_choice_labeled_fixed.pdf` |
 | `learned_frequency.svg` | `pics/adaptive_frequency_draft.pdf` |
 | `temporal_allocation.svg` | `pics/group5_cycles_energy_distance.pdf` |
