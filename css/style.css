@@ -166,19 +166,22 @@ p:last-child { margin-bottom: 0; }
 .hero { padding-block: 44px 52px; text-align: center; }
 
 .hero h1 {
-  font-size: clamp(1.85rem, 4.2vw, 2.85rem);
+  font-size: clamp(1.7rem, 2.9vw, 2.15rem);
   line-height: 1.18;
   letter-spacing: -.028em;
   margin: 0 0 14px;
-  max-width: 900px;
+  max-width: 1000px;
   margin-inline: auto;
+  text-wrap: balance;
 }
 .hero h1 .brand { color: var(--accent); }
+.hero h1 .l { white-space: nowrap; }
 
 .hero-sub {
   font-size: 1.06rem;
   color: var(--ink-soft);
-  max-width: 700px;
+  max-width: 760px;
+  text-wrap: balance;
   margin: 0 auto;
 }
 
@@ -540,6 +543,8 @@ footer p { margin: 0 0 6px; }
 /* ---------- responsive --------------------------------------------------- */
 
 @media (max-width: 720px) {
+  br.desk { display: none; }
+  .hero h1 .l { white-space: normal; }
   body { font-size: 16px; }
   section { padding-block: 48px; }
   .nav-brand { font-size: .98rem; }
