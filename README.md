@@ -3,3 +3,5 @@
 ICRA 2027 · under review
 
 Project page: https://ktw1404.github.io/SkateNav/
+
+arXiv: https://arxiv.org/abs/2610.25962v1

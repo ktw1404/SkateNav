@@ -38,12 +38,17 @@ cd SkateNav && python3 -m http.server 8000
 Commit here and push to `origin main`; GitHub Pages redeploys automatically. Requires a
 working github.com credential (`gh auth login -h github.com`).
 
+## Analytics
+
+Visits are counted by GoatCounter (cookie-free); the script tag sits just before `</body>` in
+`index.html`. Dashboard: <https://ktw1404.goatcounter.com>. Visits from `localhost` are not counted.
+
 ## Placeholders to fill in before announcing
 
 | Where | What |
 |---|---|
 | hero `.venue` | currently "Under review (ICRA 2027 submission)" — update on acceptance |
-| `README.md` + hero `.btn.todo` ×3 | paper, arXiv and code URLs — drop the `todo` class once linked. The manuscript PDF is deliberately **not** published here while the paper is under review |
+| `README.md` + hero `.btn.todo` ×2 | paper and code URLs (arXiv is linked) — drop the `todo` class once linked. The manuscript PDF is deliberately **not** published here while the paper is under review |
 | `#bibtex` | author list, booktitle, year |
 | clip captions (`#realworld .vid-grid`) | the short site names were inferred from the footage, not taken from the paper — confirm |
 
